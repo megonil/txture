@@ -15,6 +15,8 @@ FormatKind	  fmt_kind = FmtPPM;
 const char*	  filename = NULL;
 unsigned	  width	   = 400;
 unsigned	  height   = 400;
+// arithmetic operation to use
+char operator_mode = '%';
 
 static int
 parse_opt (int key, char* arg, struct argp_state* state)

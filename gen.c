@@ -120,3 +120,10 @@ gen_fromstr (const char* string)
 
 	error ("unknown generator kind \"%s\"", string);
 }
+
+long
+xor_generator (long x, long y)
+
+{
+	return x ^ y;
+}

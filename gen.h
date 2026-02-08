@@ -1,16 +1,23 @@
 #ifndef txture_gen
 #define txture_gen
 
+#include "gen_list.h"
+
 #include <math.h>
 
 typedef enum
 {
-	GenPerlin,
+#define T(variant, str) variant,
+	GEN_LIST (T)
+#undef T
 } GeneratorKind;
 /// X and Y are the pixel position.
 /// returns some value
 float
 perlin_noise (float x, float y);
+
+long
+xor_generator (long x, long y);
 
 // accepts macro to get the pixel value
 // perlin pixel macro
@@ -24,6 +31,12 @@ perlin_noise (float x, float y);
 	T (x, y).r = c;                                                       \
 	T (x, y).g = c;                                                       \
 	T (x, y).b = c;
+
+#define xor_pmacro(x, y, T)                                               \
+	long val   = xor_generator (x, y);                                    \
+	T (x, y).r = val;                                                     \
+	T (x, y).g = val;                                                     \
+	T (x, y).b = val;
 
 GeneratorKind
 gen_fromstr (const char* str);

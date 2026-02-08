@@ -4,8 +4,6 @@
 typedef enum
 {
 	FlagDebug,
-	FlagUsePPM,
-	FlagUseBMP,
 } Flags;
 
 typedef int flag_t;

@@ -18,6 +18,7 @@ process_ppm (FILE* file, PPMMode mode, unsigned max_val)
 	switch (gen_kind)
 		{
 		case GenPerlin: ppm_forpixels (img, perlin_pmacro); break;
+		case GenXor: ppm_forpixels (img, xor_pmacro); break;
 		}
 
 	ppm_wimage (img, file);
