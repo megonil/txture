@@ -1,16 +1,16 @@
 #include "utils.h"
 
+#include "format.h"
+
+extern FormatKind fmt_kind;
+
 const char*
 _filename ()
 {
-	if (getflag (FlagUseBMP))
+	switch (fmt_kind)
 		{
-			return default_filename bmp_format;
-		}
-
-	else if (getflag (FlagUsePPM))
-		{
-			return default_filename ppm_format;
+		case FmtPPM: return default_filename ".ppm";
+		case FmtBMP: return default_filename ".bmp";
 		}
 
 	return default_filename;

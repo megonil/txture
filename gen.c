@@ -1,5 +1,10 @@
 #include "gen.h"
 
+#include "gen_list.h"
+#include "utils.h"
+
+#include <string.h>
+
 #define fade(t) (t * t * t * (t * (t * 6 - 15) + 10))
 
 #define fast_floor(x) (((int) (x) < (x)) ? ((int) x) : ((int) x - 1))
@@ -93,3 +98,25 @@ perlin_noise (float x, float y)
 #undef fade
 #undef lerp
 #undef fast_floor
+
+GeneratorKind
+gen_fromstr (const char* string)
+{
+#define check_str(a, b) (strcmp (a, b) == 0)
+
+	// default
+	if (check_str (string, "default"))
+		{
+			return GenPerlin;
+		}
+
+#define T(variant, str)                                                   \
+	if check_str (string, str)                                            \
+		{                                                                 \
+			return variant;                                               \
+		}
+	GEN_LIST (T)
+#undef T
+
+	error ("unknown generator kind \"%s\"", string);
+}

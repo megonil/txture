@@ -52,4 +52,6 @@ ppm_fimage (PPMImage* ppm);
 				}                                                         \
 		}
 
+#define ppm_default_max_val 255
+
 #endif // !ture_ppm

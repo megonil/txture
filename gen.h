@@ -1,6 +1,12 @@
 #ifndef txture_gen
 #define txture_gen
 
+#include <math.h>
+
+typedef enum
+{
+	GenPerlin,
+} GeneratorKind;
 /// X and Y are the pixel position.
 /// returns some value
 float
@@ -18,5 +24,8 @@ perlin_noise (float x, float y);
 	T (x, y).r = c;                                                       \
 	T (x, y).g = c;                                                       \
 	T (x, y).b = c;
+
+GeneratorKind
+gen_fromstr (const char* str);
 
 #endif // !txture_gen

@@ -1,44 +1,91 @@
 #include "flags.h"
+#include "format.h"
 #include "gen.h"
 #include "ppm.h"
+#include "process.h"
 #include "utils.h"
 
-#include <math.h>
+#include <argp.h>
 #include <stdio.h>
 #include <unistd.h>
 
-flag_t flags = 0;
+flag_t		  flags	   = 0;
+GeneratorKind gen_kind = GenPerlin;
+FormatKind	  fmt_kind = FmtPPM;
+const char*	  filename = NULL;
+unsigned	  width	   = 400;
+unsigned	  height   = 400;
 
-void _Noreturn help ()
+static int
+parse_opt (int key, char* arg, struct argp_state* state)
 {
-	println_exit (
-		0, "Help:\n\t-p - use ppm file format for image\n\t-b - use bmp "
-		   "file format for image\n\t-d - debug mode(verbose)\n\t-h - "
-		   "show this "
-		   "message");
+	switch (key)
+		{
+		case 'd': setflag (FlagDebug); break;
+		case 'p': fmt_kind = FmtPPM; break;
+		case 'b': fmt_kind = FmtBMP; break;
+		case 's': filename = arg; break;
+		case 'h': height = str2umax (arg, 10); break;
+		case 'w': width = str2umax (arg, 10); break;
+		case ARGP_KEY_ARG: // program argument
+			{
+				gen_kind = gen_fromstr (arg);
+			}
+		}
+
+	return 0;
 }
+
+#define GROUP_GENS 0
+#define GROUP_FORMATS 1
+#define GROUP_FILE_OPT 2
+
+static struct argp_option options[] = {
+	{.name	= "debug",
+	 .key	= 'd',
+	 .arg	= 0,
+	 .flags = 0,
+	 "Enable debug mode(verbose)"},
+	{.name	= "ppm",
+	 .key	= 'p',
+	 .arg	= 0,
+	 .flags = 0,
+	 .doc	= "Use ppm file format",
+	 .group = GROUP_FORMATS},
+	{.name	= "bmp",
+	 .key	= 'b',
+	 .arg	= 0,
+	 .flags = 0,
+	 .doc	= "Use bmp file format",
+	 .group = GROUP_FORMATS},
+	{.name	= "save",
+	 .key	= 's',
+	 .arg	= "FILE",
+	 .flags = 0,
+	 .group = GROUP_FILE_OPT,
+	 .doc	= "Specify to which file save, defaults to out.<fileformat>"},
+	{.name	= "height",
+	 .key	= 'h',
+	 .arg	= "NUM",
+	 .flags = 0,
+	 .doc	= "Specify the height of the image, defaults to 400",
+	 .group = GROUP_FILE_OPT},
+	{.name	= "width",
+	 .key	= 'w',
+	 .arg	= "NUM",
+	 .flags = 0,
+	 .doc	= "Specify the width of the image, defaults to 400",
+	 .group = GROUP_FILE_OPT},
+};
+
+static struct argp argp = {options, parse_opt};
 
 int
 main (int argc, char* argv[])
 {
-	char c;
-	while ((c = getopt (argc, argv, "p::b::d::h::")) != -1)
-		{
-			switch (c)
-				{
-				case 'p': setflag (FlagUsePPM); break;
-				case 'b': setflag (FlagUseBMP); break;
-				case 'd': setflag (FlagDebug); break;
-				case 'h': help ();
-				}
-		}
+	argp_parse (&argp, argc, argv, 0, 0, 0);
 
-	const char* filename;
-	if (optind != argc)
-		{
-			filename = argv[optind];
-		}
-	else
+	if (filename == NULL)
 		{
 			filename = _filename ();
 		}
@@ -54,26 +101,10 @@ main (int argc, char* argv[])
 			return 1;
 		}
 
-	if (getflag (FlagUsePPM))
+	switch (fmt_kind)
 		{
-			// just defaults
-			int		width	= 400;
-			int		height	= 400;
-			int		max_val = 255;
-			PPMMode mode	= P6;
-
-			PPMImage* img = ppm_aimage (width, height, max_val, mode);
-			debugln ("Created image.");
-			// for now use the perlin noise generator
-			ppm_forpixels (img, perlin_pmacro);
-
-			ppm_wimage (img, file);
-			ppm_fimage (img);
-		}
-
-	else if (getflag (FlagUseBMP))
-		{
-			unimplemented ("BMP file format");
+		case FmtPPM: process_ppm (file, P6, ppm_default_max_val); break;
+		case FmtBMP: unimplemented ("BMP file format");
 		}
 
 	fclose (file);
