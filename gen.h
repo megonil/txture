@@ -3,6 +3,8 @@
 
 #include "gen_list.h"
 
+#define MAX_GEN_VALUE UINT64_MAX
+
 #include <math.h>
 
 typedef enum
@@ -27,16 +29,15 @@ xor_generator (long x, long y);
 	n += 1.0;                                                             \
 	n /= 2.0;                                                             \
                                                                           \
-	int c	   = round (n * max_val);                                     \
-	T (x, y).r = c;                                                       \
-	T (x, y).g = c;                                                       \
-	T (x, y).b = c;
+	long c = roundl (n * max_val);                                        \
+	mapclr (c, x, y, &T (x, y));
 
 #define xor_pmacro(x, y, T)                                               \
-	long val   = xor_generator (x, y);                                    \
-	T (x, y).r = val;                                                     \
-	T (x, y).g = val;                                                     \
-	T (x, y).b = val;
+	long val = xor_generator (x, y);                                      \
+	mapclr (val, x, y, &T (x, y));
+
+// xor pixel colorized macro
+#define xor_pcmaro()
 
 GeneratorKind
 gen_fromstr (const char* str);

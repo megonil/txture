@@ -123,7 +123,6 @@ gen_fromstr (const char* string)
 
 long
 xor_generator (long x, long y)
-
 {
 	return x ^ y;
 }

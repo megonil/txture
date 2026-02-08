@@ -1,6 +1,8 @@
 #ifndef ture_ppm
 #define ture_ppm
 
+#include "utils.h"
+
 #include <stdint.h>
 #include <stdio.h>
 typedef enum
@@ -8,11 +10,6 @@ typedef enum
 	P3,
 	P6
 } PPMMode;
-
-typedef struct
-{
-	uint16_t r, g, b; // simple
-} PPMPixel;
 
 typedef struct
 {
@@ -24,8 +21,8 @@ typedef struct
 
 typedef struct
 {
-	PPMHeader  header;
-	PPMPixel** data;
+	PPMHeader header;
+	Colors**  data;
 } PPMImage;
 
 /// Allocate ppm image
@@ -42,7 +39,7 @@ ppm_fimage (PPMImage* ppm);
 
 #define ppm_getpixel(x, y) img->data[y][x]
 
-/// accepts some macros(or function) T(x, y)
+/// accepts some macros(or function) T(x, y, t)
 #define ppm_forpixels(img, T)                                             \
 	for (int y = 0; y < img->header.rows; ++y)                            \
 		{                                                                 \

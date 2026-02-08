@@ -1,7 +1,11 @@
 #ifndef txture_utils
 #define txture_utils
 
+#include "format.h"
+#include "gen.h"
+
 #include <errno.h>
+#include <float.h>
 #include <inttypes.h>
 #include <limits.h>
 #include <stdint.h>
@@ -13,6 +17,24 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+typedef struct
+{
+	uint16_t r, g, b;
+} Colors;
+
+struct Spec
+{
+	GeneratorKind gen_kind;
+	FormatKind	  fmt_kind;
+	unsigned	  width;
+	unsigned	  height;
+	unsigned	  max_val;
+	uint8_t		  mono;
+	uint8_t		  colors_set;
+	uint8_t		  random;
+	Colors		  colors;
+};
 
 #define setflag(fl) flags |= (1 << fl)
 #define getflag(fl) (flags & (1 << fl))
@@ -71,6 +93,17 @@ str2umax (char* s, int base)
 
 	return n;
 }
+
+typedef enum
+{
+	MapNormalize,
+	MapMod,
+	MapChannel,
+	MapPalette,
+} ColorMapState;
+
+void
+mapclr (long value, unsigned x, unsigned y, Colors* out);
 
 #undef strconv
 #endif // !txture_utils

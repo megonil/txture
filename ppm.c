@@ -1,5 +1,7 @@
 #include "ppm.h"
 
+#include "utils.h"
+
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -8,8 +10,8 @@
 
 #define sizeof_image_struct sizeof (PPMImage)
 #define n_pixels(w, h) w* h
-#define sizeof_pixels(w, h, m) n_pixels (w, h) * bytes_per_pixel (m) / 8
-#define sizeof_row(w, m) bytes_per_pixel (m) * w / 8
+#define sizeof_pixels(w, h, m) n_pixels (w, h) * bytes_per_pixel (m) * 3
+#define sizeof_row(w, m) bytes_per_pixel (m) * w * 3
 
 PPMImage*
 ppm_aimage (int width, int height, int max_val, PPMMode mode)
@@ -23,12 +25,12 @@ ppm_aimage (int width, int height, int max_val, PPMMode mode)
 	img->header.rows	= height;
 	img->header.mode	= mode;
 
-	img->data = (PPMPixel**) (img + 1); // set the pointer to the end of
-										// PPMImage struct
+	img->data = (Colors**) (img + 1); // set the pointer to the end of
+									  // PPMImage struct
 
 	for (int y = 0; y < img->header.rows; ++y)
 		{
-			img->data[y] = calloc (img->header.cols, sizeof (PPMPixel));
+			img->data[y] = calloc (img->header.cols, sizeof (Colors));
 		}
 	return img;
 }
@@ -37,14 +39,31 @@ static void
 write_header (PPMHeader* header, FILE* file)
 {
 	fprintf (file, "%s\n%u %u\n%u\n", ppm_mode2str (header->mode),
-			 header->rows, header->cols, header->max_val);
+			 header->cols, header->rows, header->max_val - 1);
+}
+
+static inline void
+ppm_write_sample (uint16_t v, FILE* file, uint16_t max_val)
+{
+	if (max_val < 256)
+		{
+			uint8_t b = (uint8_t) v;
+			fwrite (&b, 1, 1, file);
+		}
+
+	else
+		{
+			uint8_t high = (v >> 8) & 0xFF;
+			uint8_t low	 = v & 0xFF;
+			fwrite (&high, 1, 1, file);
+			fwrite (&low, 1, 1, file);
+		}
 }
 
 int
 ppm_wimage (PPMImage* image, FILE* file)
 {
 	write_header (&image->header, file);
-	uint8_t bytes_per = bytes_per_pixel (image->header.max_val);
 	for (int y = 0; y < image->header.rows; ++y)
 		{
 			for (int x = 0; x < image->header.cols; ++x)
@@ -52,9 +71,12 @@ ppm_wimage (PPMImage* image, FILE* file)
 					// TODO:
 					// generic struct pixels
 					// safe write for any endiannes
-					fwrite (&(image->data[y][x]).r, bytes_per, 1, file);
-					fwrite (&(image->data[y][x]).g, bytes_per, 1, file);
-					fwrite (&(image->data[y][x]).b, bytes_per, 1, file);
+					ppm_write_sample (image->data[y][x].r, file,
+									  image->header.max_val);
+					ppm_write_sample (image->data[y][x].g, file,
+									  image->header.max_val);
+					ppm_write_sample (image->data[y][x].b, file,
+									  image->header.max_val);
 				}
 		}
 
