@@ -2,37 +2,54 @@
 #define ture_ppm
 
 #include <stdint.h>
+#include <stdio.h>
 typedef enum
 {
 	P3,
 	P6
 } PPMMode;
 
-/// Write ppm mode
-void
-ppm_wmode (PPMMode m, const char* filename);
+typedef struct
+{
+	uint16_t r, g, b; // simple
+} PPMPixel;
 
 typedef struct
 {
-	int		width;
-	int		height;
-	PPMMode mode;
+	unsigned int rows; // width
+	unsigned int cols; // height
+	unsigned int max_val;
+	PPMMode		 mode;
 } PPMHeader;
 
-/// Write ppm header to file
-void
-ppm_wheader (PPMHeader* h, const char* filename);
-
-typedef uint8_t* PPMData;
-
 typedef struct
 {
-	PPMHeader header;
-	PPMData	  data;
-} PPM;
+	PPMHeader  header;
+	PPMPixel** data;
+} PPMImage;
+
+/// Allocate ppm image
+PPMImage*
+ppm_aimage (int width, int height, int max_val, PPMMode mode);
 
 /// Write ppm image to file
+int
+ppm_wimage (PPMImage* ppm, FILE* file);
+
+/// Free image
 void
-ppm_wimage (PPM* ppm, const char* filename);
+ppm_fimage (PPMImage* ppm);
+
+#define ppm_getpixel(x, y) img->data[y][x]
+
+/// accepts some macros(or function) T(x, y)
+#define ppm_forpixels(img, T)                                             \
+	for (int y = 0; y < img->header.rows; ++y)                            \
+		{                                                                 \
+			for (int x = 0; x < img->header.cols; ++x)                    \
+				{                                                         \
+					T (x, y, ppm_getpixel)                                \
+				}                                                         \
+		}
 
 #endif // !ture_ppm

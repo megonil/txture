@@ -15,21 +15,8 @@
 
 ext_flags ();
 
-inline const char*
-_filename ()
-{
-	if (getflag (FlagUseBMP))
-		{
-			return default_filename bmp_format;
-		}
-
-	else if (getflag (FlagUsePPM))
-		{
-			return default_filename ppm_format;
-		}
-
-	return default_filename;
-}
+const char*
+_filename ();
 
 // enclose string in delimiters, only for literals
 #define _enclose(str) "\"" str "\""
@@ -38,6 +25,10 @@ _filename ()
 #define println_exit(code, fmt, ...)                                      \
 	println (fmt, ##__VA_ARGS__);                                         \
 	exit (code)
+
+#define debugln(fmt, ...)                                                 \
+	if (getflag (FlagDebug))                                              \
+	println (fmt, ##__VA_ARGS__)
 
 #define error(fmt, ...) println_exit (1, "error: " fmt, ##__VA_ARGS__)
 #define unimplemented(str) error (str " is not currently implemented!")

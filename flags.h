@@ -3,6 +3,7 @@
 
 typedef enum
 {
+	FlagDebug,
 	FlagUsePPM,
 	FlagUseBMP,
 } Flags;
