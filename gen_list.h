@@ -5,6 +5,9 @@
 	T (GenPerlin, "perlin")                                               \
 	T (GenXor, "xor")                                                     \
 	T (GenValue, "value")                                                 \
-	T (GenChecker, "checkerboard")
+	T (GenChecker, "checkerboard")                                        \
+	T (GenStripes, "stripes")                                             \
+	T (GenRadial, "radial")                                               \
+	T (GenDiagonal, "diagstripes")
 
 #endif // !txture_genlist

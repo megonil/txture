@@ -4,6 +4,7 @@
 #include "gen_list.h"
 #include "utils.h"
 
+#include <math.h>
 #include <string.h>
 
 extern struct Spec spec;
@@ -156,6 +157,33 @@ double
 checkerboard_generator (long x, long y)
 {
 	return (x + y) % 2;
+}
+
+double
+stripes_generator (long x, long y)
+{
+	return sin (x);
+}
+
+double
+diagstripes_generator (long x, long y)
+{
+	return sin (x + y);
+}
+
+#define square(a) (a) * (a)
+
+double
+radial_generator (long x, long y)
+{
+	double cx = spec.width / 2.0;
+	double cy = spec.height / 2.0;
+
+	double dx		= x - cx;
+	double dy		= y - cy;
+	double distance = sqrt (square (dx - 0.5) + square (dy - 0.5));
+
+	return sin (distance);
 }
 
 double

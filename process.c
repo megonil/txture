@@ -33,6 +33,9 @@ process_ppm (FILE* file, PPMMode mode, unsigned max_val)
 		case GenXor: ppm_forpixels (img, xor_pmacro); break;
 		case GenValue: ppm_forpixels (img, value_pmacro); break;
 		case GenChecker: ppm_forpixels (img, checkerboard_pmacro); break;
+		case GenStripes: ppm_forpixels (img, stripes_pmacro); break;
+		case GenRadial: ppm_forpixels (img, radial_pmacro); break;
+		case GenDiagonal: ppm_forpixels (img, diagstripes_pmacro); break;
 		default: __builtin_unreachable ();
 		}
 
