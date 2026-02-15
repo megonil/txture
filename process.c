@@ -11,6 +11,7 @@ extern struct Spec spec;
 extern Parser r_parser;
 extern Parser g_parser;
 extern Parser b_parser;
+extern Parser v_parser;
 
 #define process_end()                                                     \
 	if (spec.clrmode == ModeColorsExprs || spec.clrmode == ModeExprs)     \
@@ -18,6 +19,10 @@ extern Parser b_parser;
 			parser_destroy (&r_parser);                                   \
 			parser_destroy (&g_parser);                                   \
 			parser_destroy (&b_parser);                                   \
+		}                                                                 \
+	if (v_parser.inited)                                                  \
+		{                                                                 \
+			parser_destroy (&v_parser);                                   \
 		}
 
 void
