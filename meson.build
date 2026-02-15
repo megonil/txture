@@ -12,6 +12,8 @@ endif
 
 deps = [m_dep, argp_dep]
 
+subdir('expr')
+
 executable(
 	'txture',
 	'main.c',
@@ -21,4 +23,5 @@ executable(
 	'process.c',
 	install: true,
 	dependencies: deps,
+	link_with: expr_engine_lib,
 )

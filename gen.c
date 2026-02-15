@@ -1,9 +1,14 @@
 #include "gen.h"
 
+#include "expr/parser.h"
 #include "gen_list.h"
 #include "utils.h"
 
+#include <stdio.h>
 #include <string.h>
+
+extern struct Spec spec;
+extern Parser	   v_parser;
 
 #define fade(t) (t * t * t * (t * (t * 6 - 15) + 10))
 
@@ -118,11 +123,26 @@ gen_fromstr (const char* string)
 	GEN_LIST (T)
 #undef T
 
-	error ("unknown generator kind \"%s\"", string);
+	spec.vexpr = string;
+	return GenValue;
 }
 
 long
 xor_generator (long x, long y)
 {
 	return x ^ y;
+}
+
+void
+normalize (double* val)
+{
+	*val += 1.0;
+	*val /= 2.0;
+	*val *= spec.max_val;
+}
+
+double
+value_generator (long x, long y)
+{
+	return expr (&v_parser, x, y, 1, spec.max_val, spec.vexpr);
 }

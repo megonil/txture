@@ -4,19 +4,28 @@
 #include "format.h"
 #include "gen.h"
 
-#include <errno.h>
 #include <float.h>
 #include <inttypes.h>
 #include <limits.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #define default_filename "out"
 #define bmp_format ".bmp"
 #define ppm_format ".ppm"
 
 #include "flags.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+typedef enum
+{
+	ModeUnset,
+	ModeMonochrome,
+	ModeRandom,
+	ModeColors,
+	ModeColorsExprs,
+	ModeExprs,
+} ColorMode;
 
 typedef struct
 {
@@ -25,15 +34,17 @@ typedef struct
 
 struct Spec
 {
-	GeneratorKind gen_kind;
-	FormatKind	  fmt_kind;
+	Colors		  colors;
+	const char*	  rexpr;
+	const char*	  gexpr;
+	const char*	  bexpr;
+	const char*	  vexpr;
 	unsigned	  width;
 	unsigned	  height;
 	unsigned	  max_val;
-	uint8_t		  mono;
-	uint8_t		  colors_set;
-	uint8_t		  random;
-	Colors		  colors;
+	GeneratorKind gen_kind;
+	FormatKind	  fmt_kind;
+	ColorMode	  clrmode;
 };
 
 #define setflag(fl) flags |= (1 << fl)
@@ -59,51 +70,16 @@ _filename ();
 #define error(fmt, ...) println_exit (1, "error: " fmt, ##__VA_ARGS__)
 #define unimplemented(str) error (str " is not currently implemented!")
 
+#define warn(fmt, ...) println ("warning: " fmt, ##__VA_ARGS__)
+
 #define strconv()                                                         \
 	perror ("error: string to number convertion");                        \
 	exit (1);
 
-inline uint
-str2umax (char* s, int base)
-{
-	char* end;
-	errno  = 0;
-	long n = strtol (s, &end, base);
-	if (end == s)
-		{
-			strconv ();
-		}
-	if ((errno == ERANGE && n == LONG_MIN))
-		{
-			strconv ();
-		}
-	if ((errno == ERANGE && n == LONG_MAX))
-		{
-			strconv ();
-		}
-	if (n < 0)
-		{
-			error ("expected positive number, got \"%s\"", s);
-		}
-
-	if (n > UINT_MAX)
-		{
-			error ("too big number \"%s\"!", s);
-		}
-
-	return n;
-}
-
-typedef enum
-{
-	MapNormalize,
-	MapMod,
-	MapChannel,
-	MapPalette,
-} ColorMapState;
+uint
+str2umax (char* s, int base);
 
 void
-mapclr (long value, unsigned x, unsigned y, Colors* out);
+mapclr (double value, unsigned x, unsigned y, Colors* out);
 
-#undef strconv
 #endif // !txture_utils

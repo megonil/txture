@@ -1,8 +1,10 @@
 #include "utils.h"
 
+#include "expr/parser.h"
 #include "format.h"
 #include "gen.h"
 
+#include <errno.h>
 #include <stdint.h>
 
 extern struct Spec spec;
@@ -36,34 +38,102 @@ _filename ()
 	return default_filename;
 }
 
+extern Parser r_parser;
+extern Parser g_parser;
+extern Parser b_parser;
+
 void
-mapclr (long value, unsigned x, unsigned y, Colors* out)
+mapclr (double value, unsigned x, unsigned y, Colors* out)
 {
-	if (spec.mono)
+	uint16_t n_val = (uint16_t) value;
+	switch (spec.clrmode)
 		{
-			uint16_t n_val = (value * spec.max_val) / MAX_GEN_VALUE;
+		case ModeUnset:
+		case ModeMonochrome:
+			{
+				out->r = out->g = out->b = n_val;
+				break;
+			}
+		case ModeRandom:
+			{
+				out->r = lmod (n_val, random () * spec.max_val);
+				out->g = lmod (n_val, random () * spec.max_val);
+				out->b = lmod (n_val, random () * spec.max_val);
+				break;
+			}
+		case ModeColors:
+			{
+				out->r = lmod (n_val, spec.colors.r);
+				out->g = lmod (n_val, spec.colors.g);
+				out->b = lmod (n_val, spec.colors.b);
+				break;
+			}
+		case ModeColorsExprs:
+			{
+				if (!r_parser.inited || !g_parser.inited
+					|| !b_parser.inited)
+					{
+						error ("expected to have exprs for all colors!");
+					}
 
-			out->r = out->g = out->b = (uint16_t) n_val;
+				out->r = lmod (expr (&r_parser, x, y, value, spec.max_val,
+									 spec.rexpr),
+							   spec.colors.r);
+				out->g = lmod (expr (&g_parser, x, y, value, spec.max_val,
+									 spec.gexpr),
+							   spec.colors.g);
+				out->b = lmod (expr (&b_parser, x, y, value, spec.max_val,
+									 spec.bexpr),
+							   spec.colors.b);
+				break;
+			}
+		case ModeExprs:
+			{
+				if (!r_parser.inited || !g_parser.inited
+					|| !b_parser.inited)
+					{
+						error ("expected to have exprs for all colors!");
+					}
+
+				out->r = expr (&r_parser, x, y, value, spec.max_val,
+							   spec.rexpr);
+				out->g = expr (&g_parser, x, y, value, spec.max_val,
+							   spec.gexpr);
+				out->b = expr (&b_parser, x, y, value, spec.max_val,
+							   spec.bexpr);
+				break;
+			}
+		default: __builtin_unreachable ();
+		}
+}
+
+inline uint
+str2umax (char* s, int base)
+{
+	char* end;
+	errno  = 0;
+	long n = strtol (s, &end, base);
+	if (end == s)
+		{
+			strconv ();
+		}
+	if ((errno == ERANGE && n == LONG_MIN))
+		{
+			strconv ();
+		}
+	if ((errno == ERANGE && n == LONG_MAX))
+		{
+			strconv ();
+		}
+	if (n < 0)
+		{
+			error ("expected positive number, got \"%s\"", s);
 		}
 
-	else if (spec.colors_set)
+	if (n > UINT_MAX)
 		{
-			out->r = lmod (value, spec.colors.r);
-			out->g = lmod (value, spec.colors.g);
-			out->b = lmod (value, spec.colors.b);
+			error ("too big number \"%s\"!", s);
 		}
 
-	else if (spec.random)
-		{
-			out->r = lmod (value, random () % spec.max_val);
-			out->g = lmod (value, random () % spec.max_val);
-			out->b = lmod (value, random () % spec.max_val);
-		}
-
-	else
-		{
-			out->r = value * x * 255 / UINT16_MAX;
-			out->g = value * y * 255 / UINT16_MAX;
-			out->b = value * (x + y) * 255 / UINT16_MAX;
-		}
+	return n;
 }
