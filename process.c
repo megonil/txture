@@ -36,6 +36,7 @@ process_ppm (FILE* file, PPMMode mode, unsigned max_val)
 		case GenStripes: ppm_forpixels (img, stripes_pmacro); break;
 		case GenRadial: ppm_forpixels (img, radial_pmacro); break;
 		case GenDiagonal: ppm_forpixels (img, diagstripes_pmacro); break;
+		case GenSimplex: ppm_forpixels (img, simplex_pmacro); break;
 		default: __builtin_unreachable ();
 		}
 

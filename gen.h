@@ -16,6 +16,9 @@ typedef enum
 float
 perlin_noise (float x, float y);
 
+double
+simplex_noise (long x, long y);
+
 long
 xor_generator (long x, long y);
 
@@ -49,6 +52,11 @@ expand (double* val);
 // perlin pixel macro
 #define perlin_pmacro(x, y, T)                                            \
 	double val = (double) perlin_noise (x * 0.1, y * 0.1);                \
+	normalize (&val);                                                     \
+	mapval (T);
+
+#define simplex_pmacro(x, y, T)                                           \
+	double val = simplex_noise (x * 0.5, y * 0.5);                        \
 	normalize (&val);                                                     \
 	mapval (T);
 

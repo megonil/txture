@@ -8,6 +8,7 @@
 	T (GenChecker, "checkerboard")                                        \
 	T (GenStripes, "stripes")                                             \
 	T (GenRadial, "radial")                                               \
-	T (GenDiagonal, "diagstripes")
+	T (GenDiagonal, "diagstripes")                                        \
+	T (GenSimplex, "simplex")
 
 #endif // !txture_genlist
