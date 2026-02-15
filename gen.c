@@ -4,7 +4,6 @@
 #include "gen_list.h"
 #include "utils.h"
 
-#include <stdio.h>
 #include <string.h>
 
 extern struct Spec spec;
@@ -127,18 +126,36 @@ gen_fromstr (const char* string)
 	return GenValue;
 }
 
-long
-xor_generator (long x, long y)
-{
-	return x ^ y;
-}
-
 void
 normalize (double* val)
 {
 	*val += 1.0;
 	*val /= 2.0;
 	*val *= spec.max_val;
+}
+
+void
+normalize_wrap (double* val)
+{
+	*val = fmod (fabs (*val), (double) spec.max_val);
+}
+
+void
+expand (double* val)
+{
+	*val *= spec.max_val;
+}
+
+long
+xor_generator (long x, long y)
+{
+	return x ^ y;
+}
+
+double
+checkerboard_generator (long x, long y)
+{
+	return (x + y) % 2;
 }
 
 double

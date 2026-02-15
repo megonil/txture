@@ -25,24 +25,39 @@ xor_generator (long x, long y);
 double
 value_generator (long x, long y);
 
+double
+checkerboard_generator (long x, long y);
+
 void
 normalize (double* val);
+
+void
+normalize_wrap (double* val);
+
+void
+expand (double* val);
 
 // accepts macro to get the pixel value
 // perlin pixel macro
 #define perlin_pmacro(x, y, T)                                            \
-	double n = (double) perlin_noise (x * 0.1, y * 0.1);                  \
-	normalize (&n);                                                       \
-	mapclr (n, x, y, &T (x, y));
+	double val = (double) perlin_noise (x * 0.1, y * 0.1);                \
+	normalize (&val);                                                     \
+	mapclr (val, x, y, &T (x, y));
+
+#define checkerboard_pmacro(x, y, T)                                      \
+	double val = checkerboard_generator (x, y);                           \
+	expand (&val);                                                        \
+	mapclr (val, x, y, &T (x, y));
 
 #define xor_pmacro(x, y, T)                                               \
 	double val = xor_generator (x, y);                                    \
-	normalize (&val);                                                     \
+	expand (&val);                                                        \
 	mapclr (val, x, y, &T (x, y));
 
 #define value_pmacro(x, y, T)                                             \
 	double val = value_generator (x, y);                                  \
-	normalize (&val);                                                     \
+	normalize_wrap (&val);                                                \
+	expand (&val);                                                        \
 	mapclr (val, x, y, &T (x, y));
 
 GeneratorKind

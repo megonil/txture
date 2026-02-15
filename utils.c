@@ -56,9 +56,9 @@ mapclr (double value, unsigned x, unsigned y, Colors* out)
 			}
 		case ModeRandom:
 			{
-				out->r = lmod (n_val, random () * spec.max_val);
-				out->g = lmod (n_val, random () * spec.max_val);
-				out->b = lmod (n_val, random () * spec.max_val);
+				out->r = lmod (n_val + (random () % 10), spec.max_val);
+				out->g = lmod (n_val + (random () % 10), spec.max_val);
+				out->b = lmod (n_val + (random () % 10), spec.max_val);
 				break;
 			}
 		case ModeColors:

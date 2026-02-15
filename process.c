@@ -32,6 +32,7 @@ process_ppm (FILE* file, PPMMode mode, unsigned max_val)
 		case GenPerlin: ppm_forpixels (img, perlin_pmacro); break;
 		case GenXor: ppm_forpixels (img, xor_pmacro); break;
 		case GenValue: ppm_forpixels (img, value_pmacro); break;
+		case GenChecker: ppm_forpixels (img, checkerboard_pmacro); break;
 		default: __builtin_unreachable ();
 		}
 
