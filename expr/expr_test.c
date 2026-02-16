@@ -42,6 +42,7 @@ static void
 test_operators ()
 {
 	// arithmetic
+	test ("5 % 2", 1);
 	test ("2 + 150", 152);
 	test ("2 * 5", 10);
 	test ("3!", 6.0);

@@ -247,12 +247,6 @@ expand (double* val)
 	*val *= spec.max_val;
 }
 
-long
-xor_generator (long x, long y)
-{
-	return x ^ y;
-}
-
 double
 checkerboard_generator (long x, long y)
 {
@@ -289,5 +283,9 @@ radial_generator (long x, long y)
 double
 value_generator (long x, long y)
 {
-	return expr (&v_parser, x, y, 1, spec.max_val, spec.vexpr);
+	double norm_x = ((double) x / spec.width) * spec.max_val;
+	double norm_y = ((double) y / spec.height) * spec.max_val;
+
+	return expr (&v_parser, (long) norm_x, (long) norm_y, 1, spec.max_val,
+				 spec.vexpr);
 }

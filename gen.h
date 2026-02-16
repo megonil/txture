@@ -19,9 +19,6 @@ perlin_noise (float x, float y);
 double
 simplex_noise (long x, long y);
 
-long
-xor_generator (long x, long y);
-
 double
 value_generator (long x, long y);
 
@@ -65,11 +62,6 @@ expand (double* val);
 	expand (&val);                                                        \
 	mapval (T);
 
-#define xor_pmacro(x, y, T)                                               \
-	double val = xor_generator (x, y);                                    \
-	expand (&val);                                                        \
-	mapval (T);
-
 #define stripes_pmacro(x, y, T)                                           \
 	double val = stripes_generator (x, y);                                \
 	normalize (&val);                                                     \
@@ -87,7 +79,6 @@ expand (double* val);
 
 #define value_pmacro(x, y, T)                                             \
 	double val = value_generator (x, y);                                  \
-	expand (&val);                                                        \
 	mapval (T);
 
 GeneratorKind

@@ -35,7 +35,6 @@ process_ppm (FILE* file, PPMMode mode, unsigned max_val)
 	switch (spec.gen_kind)
 		{
 		case GenPerlin: ppm_forpixels (img, perlin_pmacro); break;
-		case GenXor: ppm_forpixels (img, xor_pmacro); break;
 		case GenValue: ppm_forpixels (img, value_pmacro); break;
 		case GenChecker: ppm_forpixels (img, checkerboard_pmacro); break;
 		case GenStripes: ppm_forpixels (img, stripes_pmacro); break;
