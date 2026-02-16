@@ -1,6 +1,7 @@
 #ifndef txture_expr_engine_lexer
 #define txture_expr_engine_lexer
 
+#include "token_list.h"
 typedef struct
 {
 	char* formula;
@@ -9,24 +10,39 @@ typedef struct
 
 typedef enum
 {
-	TPlus,	 // +
-	TMinus,	 // -
-	TMul,	 // *
-	TDiv,	 // /
-	TMod,	 // %
-	TXor,	 // ^
-	TAnd,	 // &
-	TOr,	 // |
-	TLparen, // (
-	TRparen, // )
-	TInvert, // ~
-	TValue,	 // double value
-	TX,		 // x coordinat
-	TY,		 // y coordinat
-	TV,		 // value provided by the generator
-	TM,
-	TEOF,
+	PrecNone,
+	PrecOr,
+	PrecAnd,
+	PrecBOr,
+	PrecBXor,
+	PrecBAnd,
+	PrecBShift,
+	PrecEq,
+	PrecComp,
+	PrecTerm,
+	PrecFactor,
+	PrecUnary,
+	PrecPostfix,
+	PrecLiteral
+} Precedence;
+
+typedef enum
+{
+#define T(variant, str, prec) variant,
+	TOKEN_LIST (T)
+#undef T
 } TokenType;
+
+#define T(variant, str, prec) str,
+static const char* token_names[] = {TOKEN_LIST (T)};
+#undef T
+
+#define T(variant, str, prec) Prec##prec,
+static Precedence token_prec[] = {TOKEN_LIST (T)};
+#undef T
+
+#define tt2str(tt) token_names[tt]
+#define getprc(tt) token_prec[tt]
 
 typedef struct
 {

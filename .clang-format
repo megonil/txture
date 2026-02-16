@@ -20,6 +20,8 @@ AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: true
 AlignTrailingComments: true
 Cpp11BracedListStyle: true
+AlignConsecutiveMacros: AcrossEmptyLines
+AlignOperands: Align
 AccessModifierOffset: -4
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
@@ -28,3 +30,4 @@ AllowShortCaseLabelsOnASingleLine: true
 AlignAfterOpenBracket: Align
 AlignEscapedNewlines: Right
 AlwaysBreakAfterReturnType: All
+AlignArrayOfStructures: Left

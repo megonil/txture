@@ -4,23 +4,13 @@
 #include "lexer.h"
 
 #include <stdint.h>
-extern const char* formula;
-
-typedef enum
-{
-	PrecNone,
-	PrecTerm,
-	PrecFactor,
-	PrecUnary,
-	PrecLiteral
-} Precedence;
-
 typedef struct Expr Expr;
 
 typedef enum
 {
 	UnNot,
 	UnNegate,
+	UnFact,
 } UnaryOp;
 
 typedef struct
@@ -38,7 +28,18 @@ typedef enum
 	BiMod,
 	BiAnd,
 	BiOr,
+	BiBAnd,
+	BiBOr,
 	BiXor,
+	BiPow,
+	BiRShift,
+	BiLShift,
+	BiGt,
+	BiGe,
+	BiLt,
+	BiLe,
+	BiEq,
+	BiNEq,
 } BinaryOp;
 
 typedef struct
@@ -97,6 +98,12 @@ parser_init (Parser* parser, const char* formula);
 
 void
 parser_destroy (Parser* parser);
+
+void
+parser_reset (Parser* parser);
+
+void
+print_ast (Parser* parser);
 
 double
 expr (Parser* parser, long x, long y, double value, long max,

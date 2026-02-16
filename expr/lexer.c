@@ -5,14 +5,15 @@
 #include <ctype.h>
 #include <errno.h>
 #include <stdint.h>
-#include <stdio.h>
 
 #define advance() lexer->c++
+#define peek(i)	  *(lexer->c + i)
+#define curr()	  *lexer->c
 
 void
 lexer_init (Lexer* lexer, char* formula)
 {
-	debugln ("Lexer received formula: %s", formula);
+	debugln ("Parsing an expr %s", formula);
 	lexer->formula = formula;
 	lexer->c	   = lexer->formula;
 }
@@ -26,7 +27,7 @@ number (Lexer* lexer)
 	double number = strtod (start, &lexer->c);
 	if (start == lexer->c)
 		{
-			error ("expected number");
+			lnerror ("expected number");
 		}
 	if ((errno == ERANGE && number == DBL_MAX))
 		{
@@ -37,31 +38,72 @@ number (Lexer* lexer)
 			strconv ();
 		}
 
-	debugln ("Lexer recognized number: %g", number);
-
 	return (Token) {.opt_value = number, .type = TValue};
 }
 
 static Token
 operator (Lexer* lexer)
 {
+#define double_token(ch, t, dch, dt)                                      \
+	case ch:                                                              \
+		if (peek (1) == dch)                                              \
+			{                                                             \
+				advance ();                                               \
+				type = dt;                                                \
+			}                                                             \
+		else                                                              \
+			{                                                             \
+				type = t;                                                 \
+			}                                                             \
+		break;
+
+#define triple_token(ch, t, dch, dt, tch, tt)                             \
+	case ch:                                                              \
+		if (peek (1) == dch)                                              \
+			{                                                             \
+				advance ();                                               \
+				type = dt;                                                \
+			}                                                             \
+		else if (peek (1) == tch)                                         \
+			{                                                             \
+				advance ();                                               \
+				type = tt;                                                \
+			}                                                             \
+		else                                                              \
+			{                                                             \
+				type = t;                                                 \
+			}                                                             \
+		break;
+
 	TokenType type = 0;
-	switch (*lexer->c)
+
+	switch (curr ())
 		{
 		case '+': type = TPlus; break;
 		case '-': type = TMinus; break;
-		case '*': type = TMul; break;
-		case '/': type = TDiv; break;
-		case '&': type = TAnd; break;
-		case '|': type = TOr; break;
-		case '^': type = TXor; break;
-		case '~': type = TInvert; break;
+		case '/': type = TSlash; break;
+		case '^': type = TCaret; break;
+		case '~': type = TTilda; break;
 		case '(': type = TLparen; break;
-		case ')': type = TRparen; break;
-		default: error ("expected operator, found '%c'", *lexer->c);
+		case '%': type = TPercent; break;
+		case ')':
+			type = TRparen;
+			break;
+
+			double_token ('*', TStar, '*', TStarStar);
+			double_token ('|', TPipe, '|', TPipePipe);
+			double_token ('&', TAmp, '&', TAmpAmp);
+			double_token ('!', TBang, '=', TNEq);
+			double_token ('=', 0;
+						  lnerror ("txture's expr does not have '='"), '=',
+						  TEq);
+
+			triple_token ('>', TGt, '>', TRShift, '=', TGe);
+			triple_token ('<', TLt, '<', TLShift, '=', TLe);
+
+		default: lnerror ("expected operator, found '%c'", *lexer->c);
 		}
 
-	debugln ("Lexer found an operator: %c", *lexer->c);
 	advance ();
 	return (Token) {.type = type};
 }
@@ -69,42 +111,30 @@ operator (Lexer* lexer)
 Token
 tokenize (Lexer* lexer)
 {
-	while (isspace (*lexer->c) && *lexer->c != EOF && *lexer->c != '\0')
+	while (isspace (curr ()))
 		{
 			advance ();
 		}
 
-	if (isdigit (*lexer->c))
+	if (isdigit (curr ()))
 		{
 			return number (lexer);
 		}
 
-	if (isalpha (*lexer->c))
+	if (isalpha (curr ()))
 		{
-			switch (*lexer->c)
+			switch (curr ())
 				{
-				case 'x':
-					advance ();
-					debugln ("Lexer found X coord");
-					return (Token) {.type = TX};
-				case 'y':
-					advance ();
-					debugln ("Lexer found Y coord");
-					return (Token) {.type = TY};
-				case 'v':
-					advance ();
-					debugln ("Lexer found V");
-					return (Token) {.type = TV};
-				case 'm':
-					advance ();
-					debugln ("Lexer found MAX");
-					return (Token) {.type = TM};
+				case 'x': advance (); return (Token) {.type = TX};
+				case 'y': advance (); return (Token) {.type = TY};
+				case 'v': advance (); return (Token) {.type = TV};
+				case 'm': advance (); return (Token) {.type = TM};
 
-				default: error ("unexpected character '%c'", *lexer->c);
+				default: lnerror ("unexpected character '%c'", curr ());
 				}
 		}
 
-	if (*lexer->c == EOF || *lexer->c == '\0')
+	if (curr () == '\0')
 		{
 			return (Token) {.type = TEOF};
 		}

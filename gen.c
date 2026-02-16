@@ -5,17 +5,16 @@
 #include "utils.h"
 
 #include <math.h>
-#include <string.h>
 
 extern struct Spec spec;
 extern Parser	   v_parser;
 
-#define fade(t) (t * t * t * (t * (t * 6 - 15) + 10))
+#define fade(t)		  (t * t * t * (t * (t * 6 - 15) + 10))
 
 #define fast_floor(x) (((int) (x) < (x)) ? ((int) x) : ((int) x - 1))
 #define lerp(t, a, b) ((a) + (t) * ((b) - (a)))
 
-#define byte 0xFF
+#define byte		  0xFF
 
 // permutation table
 static unsigned char perm[] = {
@@ -57,9 +56,20 @@ static unsigned char perm[] = {
 	150, 254, 138, 236, 205, 93,  222, 114, 67,	 29,  24,  72,	243, 141,
 	128, 195, 78,  66,	215, 61,  156, 180};
 
-static int grad3[12][3] = {{1, 1, 0}, {-1, 1, 0}, {1, -1, 0}, {-1, -1, 0},
-						   {1, 0, 1}, {-1, 0, 1}, {1, 0, -1}, {-1, 0, -1},
-						   {0, 1, 1}, {0, -1, 1}, {0, 1, -1}, {0, -1, -1}};
+static int grad3[12][3] = {
+	{1,	1,  0 },
+	   {-1, 1,  0 },
+	   {1,  -1, 0 },
+	   {-1, -1, 0 },
+	{1,	0,  1 },
+	   {-1, 0,  1 },
+	   {1,  0,  -1},
+	   {-1, 0,  -1},
+	{0,	1,  1 },
+	   {0,  -1, 1 },
+	   {0,  1,  -1},
+	   {0,  -1, -1}
+};
 
 double
 dot (int* g, double x, double y)
@@ -198,7 +208,6 @@ simplex_noise (long x, long y)
 GeneratorKind
 gen_fromstr (const char* string)
 {
-#define check_str(a, b) (strcmp (a, b) == 0)
 
 	// default
 	if (check_str (string, "default"))

@@ -1,3 +1,4 @@
+#include "expr/expr_test.h"
 #include "expr/parser.h"
 #include "flags.h"
 #include "format.h"
@@ -20,25 +21,27 @@ def_parser (g_parser);
 def_parser (b_parser);
 def_parser (v_parser);
 
-struct Spec spec = {.colors	  = {0, 0, 0},
-					.fmt_kind = FmtPPM,
-					.gen_kind = GenPerlin,
-					.max_val  = UINT16_MAX,
-					.width	  = 400,
-					.height	  = 400,
-					.rexpr	  = NULL,
-					.gexpr	  = NULL,
-					.bexpr	  = NULL,
-					.vexpr	  = NULL,
-					.clrmode  = ModeUnset};
+struct Spec spec = {
+	.colors	  = {0, 0, 0},
+	.fmt_kind = FmtPPM,
+	.gen_kind = GenPerlin,
+	.max_val  = UINT16_MAX,
+	.width	  = 400,
+	.height	  = 400,
+	.rexpr	  = NULL,
+	.gexpr	  = NULL,
+	.bexpr	  = NULL,
+	.vexpr	  = NULL,
+	.clrmode  = ModeUnset
+};
 
-#define KEY_BMP 512
-#define KEY_PPM 513
-#define KEY_MONO 514
+#define KEY_BMP	   512
+#define KEY_PPM	   513
+#define KEY_MONO   514
 #define KEY_RANDOM 515
-#define KEY_REXPR 516
-#define KEY_GEXPR 517
-#define KEY_BEXPR 518
+#define KEY_REXPR  516
+#define KEY_GEXPR  517
+#define KEY_BEXPR  518
 
 #define set_clrmode(mode)                                                 \
 	if (spec.clrmode != ModeUnset)                                        \
@@ -109,7 +112,15 @@ parse_opt (int key, char* arg, struct argp_state* state)
 			save_color ('b', b);
 
 		case ARGP_KEY_ARG: // program argument
-			spec.gen_kind = gen_fromstr (arg);
+			if (check_str (arg, "test"))
+				{
+					setflag (FlagDebug);
+					expr_test ();
+				}
+			else
+				{
+					spec.gen_kind = gen_fromstr (arg);
+				}
 			break;
 		}
 
@@ -119,8 +130,8 @@ parse_opt (int key, char* arg, struct argp_state* state)
 #undef save_color
 #undef set_clrmode
 
-#define GROUP_GENS 0
-#define GROUP_FORMATS 1
+#define GROUP_GENS	   0
+#define GROUP_FORMATS  1
 #define GROUP_FILE_OPT 2
 
 static struct argp_option options[] = {
@@ -204,7 +215,8 @@ static struct argp_option options[] = {
 	 .arg	= "STR",
 	 .flags = 0,
 	 .doc	= "Provide an expr to calculate the value of the blue color"},
-	{0}};
+	{0}
+};
 
 static struct argp argp = {options, parse_opt};
 

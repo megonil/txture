@@ -10,10 +10,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define default_filename "out"
-#define bmp_format ".bmp"
-#define ppm_format ".ppm"
+#define bmp_format		 ".bmp"
+#define ppm_format		 ".ppm"
 
 #include "flags.h"
 
@@ -56,7 +57,7 @@ const char*
 _filename ();
 
 // enclose string in delimiters, only for literals
-#define _enclose(str) "\"" str "\""
+#define _enclose(str)	  "\"" str "\""
 
 #define println(fmt, ...) printf (fmt "\n", ##__VA_ARGS__)
 #define println_exit(code, fmt, ...)                                      \
@@ -67,10 +68,17 @@ _filename ();
 	if (getflag (FlagDebug))                                              \
 	println (fmt, ##__VA_ARGS__)
 
-#define error(fmt, ...) println_exit (1, "error: " fmt, ##__VA_ARGS__)
+#define debug(fmt, ...)                                                   \
+	if (getflag (FlagDebug))                                              \
+	printf (fmt, ##__VA_ARGS__)
+
+#define error(fmt, ...)	   println_exit (1, "error: " fmt, ##__VA_ARGS__)
+#define lnerror(fmt, ...)  println_exit (1, "\nerror: " fmt, ##__VA_ARGS__)
 #define unimplemented(str) error (str " is not currently implemented!")
 
-#define warn(fmt, ...) println ("warning: " fmt, ##__VA_ARGS__)
+#define warn(fmt, ...)	   println ("warning: " fmt, ##__VA_ARGS__)
+
+#define check_str(a, b)	   (strcmp (a, b) == 0)
 
 #define strconv()                                                         \
 	perror ("error: string to number convertion");                        \

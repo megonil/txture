@@ -2,6 +2,7 @@
 
 #include "../utils.h"
 #include "lexer.h"
+#include "operators_list.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -13,6 +14,7 @@ next (Parser* p)
 {
 	p->previous = p->current;
 	p->current	= tokenize (p->lexer);
+	debug ("%s ", tt2str (p->current.type));
 }
 
 static int
@@ -25,32 +27,6 @@ match (Parser* p, TokenType type)
 		}
 
 	return 0;
-}
-
-static Precedence
-getprc (TokenType type)
-{
-	switch (type)
-		{
-		case TPlus:
-		case TMinus: return PrecTerm;
-		case TMul:
-		case TDiv:
-		case TMod:
-		case TXor:
-		case TAnd:
-		case TOr: return PrecFactor;
-		case TValue:
-		case TX:
-		case TV:
-		case TM:
-		case TY: return PrecLiteral;
-		case TInvert: return PrecUnary;
-		case TLparen:
-		case TRparen:
-		case TEOF: return PrecNone;
-		default: __builtin_unreachable ();
-		}
 }
 
 #define make_expr() malloc (sizeof (Expr))
@@ -106,32 +82,44 @@ value_expr (Parser* p)
 	return expr;
 }
 
+#define T(un, t) t,
+static TokenType unop_2tt[] = {UNOP_LIST (T)};
+#undef T
+
+#define unop_2str(un) tt2str (unop_2tt[un])
+
+#define T(un, t)	  t,
+static TokenType binop_2tt[] = {BINOP_LIST (T)};
+#undef T
+
+#define binop_2str(bin) tt2str (binop_2tt[bin])
+
 static UnaryOp
 tt_2unop (TokenType type)
 {
+#define T(un, t)                                                          \
+	case t: return un;
 	switch (type)
 		{
-		case TInvert: return UnNot;
-		case TMinus: return UnNegate;
-		default: error ("expected unary operator");
+			UNOP_LIST (T);
+		default:
+			lnerror ("expected unary operator, got `%s`", tt2str (type));
 		}
+#undef T
 }
 
 static BinaryOp
 tt_2binop (TokenType type)
 {
+#define T(un, t)                                                          \
+	case t: return un;
 	switch (type)
 		{
-		case TPlus: return BiAdd;
-		case TMinus: return BiSub;
-		case TMul: return BiMul;
-		case TDiv: return BiDiv;
-		case TMod: return BiMod;
-		case TXor: return BiXor;
-		case TAnd: return BiAnd;
-		case TOr: return BiOr;
-		default: error ("expected binary operator");
+			BINOP_LIST (T);
+		default:
+			lnerror ("expected binary operator, got `%s`", tt2str (type));
 		}
+#undef T
 }
 
 static Expr*
@@ -168,10 +156,12 @@ grouping (Parser* p)
 static Expr*
 binary (Parser* p, Expr* left)
 {
-	BinaryOp op = tt_2binop (p->current.type);
+	Precedence prec = getprc (p->current.type);
+	BinaryOp   op	= tt_2binop (p->current.type);
+
 	next (p); // skip operator
 
-	Expr* right	 = pexpr (p, PrecNone);
+	Expr* right	 = pexpr (p, prec);
 	Expr* binary = make_expr ();
 
 	binary->kind				 = KBinaryExpr;
@@ -180,6 +170,17 @@ binary (Parser* p, Expr* left)
 	binary->data.binary.operator = op;
 
 	return binary;
+}
+
+static Expr*
+fact_expr (Parser* p, Expr* subexpr)
+{
+	make_exprk (KUnaryExpr);
+	expr->data.unary.operator = UnFact;
+	expr->data.unary.expr	  = subexpr;
+	next (p);
+
+	return expr;
 }
 
 static Expr*
@@ -199,7 +200,14 @@ pexpr (Parser* p, Precedence prec)
 
 	while (prec < getprc (p->current.type))
 		{
-			exr = binary (p, exr);
+			if (p->current.type == TBang)
+				{
+					exr = fact_expr (p, exr);
+				}
+			else
+				{
+					exr = binary (p, exr);
+				}
 		}
 
 	return exr;
@@ -211,7 +219,8 @@ void
 parse (Parser* p)
 {
 	next (p);
-	Expr* expr	 = pexpr (p, PrecNone);
+	Expr* expr = pexpr (p, PrecNone);
+
 	p->main_expr = expr;
 	p->ran		 = 1;
 }
@@ -227,7 +236,81 @@ parser_init (Parser* p, const char* formula)
 	p->inited = 1;
 }
 
+int offset = 0;
+
 void
+parser_reset (Parser* p)
+{
+	p->inited = 0;
+	p->ran	  = 0;
+	offset	  = 0;
+	parser_destroy (p);
+}
+
+static void
+print_offset ()
+{
+	for (int i = 0; i < offset; ++i)
+		{
+			printf (" ");
+		}
+}
+
+static void
+print_node (Expr* expr)
+{
+	print_offset ();
+	switch (expr->kind)
+		{
+		case KUnaryExpr:
+			{
+				offset += 2;
+				UnaryExpr* un = &expr->data.unary;
+
+				println ("Unary(%s)", unop_2str (un->operator));
+				print_node (un->expr);
+				offset -= 2;
+				break;
+			}
+		case KBinaryExpr:
+			{
+				offset += 2;
+				BinaryExpr* bin = &expr->data.binary;
+
+				println ("Binary(%s)", binop_2str (bin->operator));
+				print_node (bin->lhs);
+				print_node (bin->rhs);
+				offset -= 2;
+				break;
+			}
+
+		case KValueExpr:
+			println ("Value(%g)", expr->data.value.value);
+			break;
+		case KXExpr: println ("X"); break;
+		case KYExpr: println ("Y"); break;
+		case KVExpr: println ("V"); break;
+		case KMExpr: println ("M"); break;
+		}
+}
+
+void
+print_ast (Parser* parser)
+{
+	print_node (parser->main_expr);
+}
+
+static void
+expr_destroy (Expr* expr);
+
+void
+parser_destroy (Parser* parser)
+{
+	free (parser->lexer);
+	expr_destroy (parser->main_expr);
+}
+
+static void
 expr_destroy (Expr* expr)
 {
 	switch (expr->kind)
@@ -250,61 +333,89 @@ expr_destroy (Expr* expr)
 	free (expr);
 }
 
-void
-parser_destroy (Parser* parser)
-{
-	free (parser->lexer);
-	expr_destroy (parser->main_expr);
-}
-
 #define roundi(v) ((int) round (v))
 
 static double
+fact (double v)
+{
+	long result = 1;
+	long n		= (long) floor (v);
+	for (int i = 1; i <= n; ++i)
+		{
+			result *= i;
+		}
+
+	return result;
+}
+
+static double
 evaluate_expr (Expr* expr, long x, long y, double value, long max);
+
+#define evaluate_subexpr(EXPR) evaluate_expr (EXPR, x, y, value, max)
 
 static double
 evaluate_binary (BinaryExpr* expr, long x, long y, double value, long max)
 {
 	switch (expr->operator)
 		{
+#define evaluate_left()	 evaluate_subexpr (expr->lhs)
+#define evaluate_right() evaluate_subexpr (expr->rhs)
+
 #define binop(variant, op)                                                \
-	case variant:                                                         \
-		return evaluate_expr (expr->lhs, x, y, value, max)                \
-			op evaluate_expr (expr->rhs, x, y, value, max);
+	case variant: return evaluate_left () op evaluate_right ();
 
 #define bin_binop(variant, op)                                            \
 	case variant:                                                         \
-		return roundi (evaluate_expr (expr->lhs, x, y, value, max))       \
-			op roundi (evaluate_expr (expr->rhs, x, y, value, max));
+		return (roundi (evaluate_left ())) op (roundi (evaluate_right ()));
+
+#define func_binop(variant, func)                                         \
+	case variant: return func (evaluate_left (), evaluate_right ());
 
 			binop (BiAdd, +);
 			binop (BiSub, -);
 			binop (BiMul, *);
 			binop (BiDiv, /);
-			bin_binop (BiAnd, &);
-			bin_binop (BiOr, |);
-			bin_binop (BiXor, ^);
+			binop (BiGt, >);
+			binop (BiGe, >=);
+			binop (BiLt, <);
+			binop (BiLe, <=);
+			binop (BiEq, ==);
+			binop (BiNEq, !=);
+			binop (BiAnd, &&);
+			binop (BiOr, ||);
 
-		case BiMod:
-			return remainder (evaluate_expr (expr->lhs, x, y, value, max),
-							  evaluate_expr (expr->rhs, x, y, value, max));
+			bin_binop (BiBAnd, &);
+			bin_binop (BiBOr, |);
+			bin_binop (BiXor, ^);
+			bin_binop (BiRShift, >>);
+			bin_binop (BiLShift, <<);
+
+			func_binop (BiMod, fmod);
+			func_binop (BiPow, pow);
+
 		default: __builtin_unreachable ();
 		}
 
 #undef binop
+#undef bin_binop
+#undef func_binop
+#undef evaluate_left
+#undef evaluate_right
 }
 
 static double
 evaluate_unary (UnaryExpr* expr, long x, long y, double value, long max)
 {
+#define evaluate_un() evaluate_subexpr (expr->expr)
 	switch (expr->operator)
 		{
-		case UnNot:
-			return ~roundi (evaluate_expr (expr->expr, x, y, value, max));
-		case UnNegate:
-			return -(evaluate_expr (expr->expr, x, y, value, max));
+		case UnNot: return ~roundi (evaluate_un ());
+		case UnNegate: return -(evaluate_un ());
+		case UnFact: return fact (evaluate_un ());
+
 		default: __builtin_unreachable ();
 		}
+#undef evaluate_un
 }
 
 static double
@@ -349,6 +460,8 @@ expr (Parser* p, long x, long y, double value, long max,
 		{
 			parser_init (p, formula);
 			parse (p);
+			debugln ("\nParsed formula %s",
+					 formula); // end the print sequence
 
 			return evaluate (p, x, y, value, max);
 		}
